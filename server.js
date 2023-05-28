@@ -102,8 +102,6 @@ function getMessages(callback) {
     });
 }
 
-
-// Route pour la création d'un compte
 app.post('/signup', async (req, res) => {
     const { username, password } = req.body;
     const accounts = readAccountsFromFile();
@@ -120,7 +118,7 @@ app.post('/signup', async (req, res) => {
         accounts.push(newAccount);
         writeAccountsToFile(accounts);
 
-        res.redirect(`/home.html?username=${encodeURIComponent(newAccount.username)}&points=${newAccount.points}`);
+        res.redirect('/login.html'); // Redirection vers la page login.html après la création du compte
     } catch (error) {
         console.error('Erreur lors de la vérification du mot de passe:', error);
         res.status(500).json({ error: 'Erreur lors de la vérification du mot de passe.' });
