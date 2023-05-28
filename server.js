@@ -21,8 +21,13 @@ app.use(bodyParser.json());
 // Fonction pour lire les comptes depuis le fichier JSON
 function readAccountsFromFile() {
     try {
-        const accountsData = fs.readFileSync(accountsFilePath, 'utf8');
-        return JSON.parse(accountsData);
+        if (fs.existsSync(accountsFilePath)) {
+            const accountsData = fs.readFileSync(accountsFilePath, 'utf8');
+            return JSON.parse(accountsData);
+        } else {
+            console.log('Le fichier des comptes n\'existe pas. Création d\'un nouveau fichier.');
+            return [];
+        }
     } catch (err) {
         console.error('Erreur lors de la lecture des comptes depuis le fichier:', err);
         return [];
@@ -48,17 +53,17 @@ function initializeDatabase() {
       content TEXT
     )
   `, (error) => {
-      if (error) {
-          console.error('Erreur lors de la création de la table "messages" dans la base de données:', error);
-      } else {
-          console.log('Table "messages" créée avec succès dans la base de données.');
+        if (error) {
+            console.error('Erreur lors de la création de la table "messages" dans la base de données:', error);
+        } else {
+            console.log('Table "messages" créée avec succès dans la base de données.');
 
-          // Une fois la table créée, vous pouvez appeler getMessages ici
-          getMessages((messages) => {
-              // Traitez les messages récupérés comme nécessaire
-          });
-      }
-  });
+            // Une fois la table créée, vous pouvez appeler getMessages ici
+            getMessages((messages) => {
+                // Traitez les messages récupérés comme nécessaire
+            });
+        }
+    });
     db.close();
 }
 
@@ -115,7 +120,7 @@ app.post('/signup', async (req, res) => {
         accounts.push(newAccount);
         writeAccountsToFile(accounts);
 
-        res.status(201).json({ message: 'Compte créé avec succès.' });
+        res.redirect(`/home.html?username=${encodeURIComponent(username)}&points=${newAccount.points}`);
     } catch (error) {
         console.error('Erreur lors de la vérification du mot de passe:', error);
         res.status(500).json({ message: 'Erreur lors de la vérification du mot de passe.' });
@@ -162,7 +167,8 @@ app.get('/messages', (req, res) => {
 
 // Route pour la page d'accueil
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'login.html'));
+    const { username, points } = req.query;
+    res.sendFile(path.join(__dirname, 'public', 'home.html'));
 });
 
 // Démarrage du serveur
@@ -239,3 +245,4 @@ wss.on('connection', (ws) => {
 // Planification de l'envoi des messages aux clients toutes les 5 secondes
 //setTimeout(sendMessagesToClients, 0);
 //setInterval(sendMessagesToClients, 5000);
+
