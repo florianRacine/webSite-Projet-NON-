@@ -119,8 +119,7 @@ app.post('/signup', async (req, res) => {
         accounts.push(newAccount);
         writeAccountsToFile(accounts);
 
-        // Redirection vers la page de connexion
-        res.redirect('/login.html');
+        res.json({ message: 'Compte créé avec succès.' });
     } catch (error) {
         console.error('Erreur lors de la vérification du mot de passe:', error);
         res.status(500).json({ error: 'Erreur lors de la vérification du mot de passe.' });

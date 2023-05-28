@@ -23,7 +23,42 @@
             </form>
             <div id="error-container" class="error-container"></div>
         </div>
-        <script src="script.js"></script>
+        <script>
+            // Fonction pour rediriger vers la page de connexion
+            function redirectToLogin() {
+                            window.location.href = '/login.html';
+                        }
+
+            // Code pour gérer la soumission du formulaire
+            document.getElementById('signup-form').addEventListener('submit', function(event) {
+                            event.preventDefault(); // Empêcher le comportement par défaut du formulaire
+
+                            // Obtenir les valeurs du formulaire
+                            var username = document.getElementById('signup-username').value;
+                            var password = document.getElementById('signup-password').value;
+
+                            // Envoyer la requête de création du compte
+                            fetch('/signup', {
+                                            method: 'POST',
+                                            headers: {
+                                                            'Content-Type': 'application/json'
+                                                        },
+                                            body: JSON.stringify({ username: username, password: password })
+                                        })
+                                .then(response => response.json())
+                                .then(data => {
+                                                // Vérifier si la création du compte a réussi
+                                                if (data.message === 'Compte créé avec succès.') {
+                                                                redirectToLogin(); // Rediriger vers la page de connexion
+                                                            } else {
+                                                                            var errorContainer = document.getElementById('error-container');
+                                                                            errorContainer.innerText = 'Erreur: ' + data.error;
+                                                                        }
+                                            })
+                                .catch(error => {
+                                                console.error('Erreur lors de la requête de création du compte:', error);
+                                            });
+                        });
+        </script>
     </body>
 </html>
-
