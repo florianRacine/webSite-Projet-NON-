@@ -100,7 +100,7 @@
                 .catch(error => console.error('Erreur lors de la récupération du top board:', error));
 
             // Établir une connexion WebSocket avec le serveur
-            const socket = new WebSocket('ws://localhost:3000');
+            const socket = new WebSocket('wss://projetnon.onrender.com/');
 
             // Gérer les événements de la connexion WebSocket
             socket.addEventListener('open', () => {
