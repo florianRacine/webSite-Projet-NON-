@@ -53,17 +53,17 @@ function initializeDatabase() {
       content TEXT
     )
   `, (error) => {
-        if (error) {
-            console.error('Erreur lors de la création de la table "messages" dans la base de données:', error);
-        } else {
-            console.log('Table "messages" créée avec succès dans la base de données.');
+      if (error) {
+          console.error('Erreur lors de la création de la table "messages" dans la base de données:', error);
+      } else {
+          console.log('Table "messages" créée avec succès dans la base de données.');
 
-            // Une fois la table créée, vous pouvez appeler getMessages ici
-            getMessages((messages) => {
-                // Traitez les messages récupérés comme nécessaire
-            });
-        }
-    });
+          // Une fois la table créée, vous pouvez appeler getMessages ici
+          getMessages((messages) => {
+              // Traitez les messages récupérés comme nécessaire
+          });
+      }
+  });
     db.close();
 }
 
@@ -102,6 +102,7 @@ function getMessages(callback) {
     });
 }
 
+// Route pour la création d'un compte
 app.post('/signup', async (req, res) => {
     const { username, password } = req.body;
     const accounts = readAccountsFromFile();
@@ -118,7 +119,8 @@ app.post('/signup', async (req, res) => {
         accounts.push(newAccount);
         writeAccountsToFile(accounts);
 
-        res.redirect('/login.html'); // Redirection vers la page login.html après la création du compte
+        // Redirection vers la page de connexion
+        res.redirect('/login.html');
     } catch (error) {
         console.error('Erreur lors de la vérification du mot de passe:', error);
         res.status(500).json({ error: 'Erreur lors de la vérification du mot de passe.' });
@@ -243,4 +245,3 @@ wss.on('connection', (ws) => {
 // Planification de l'envoi des messages aux clients toutes les 5 secondes
 //setTimeout(sendMessagesToClients, 0);
 //setInterval(sendMessagesToClients, 5000);
-
