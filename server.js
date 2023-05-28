@@ -110,7 +110,7 @@ app.post('/signup', async (req, res) => {
 
     const existingAccount = accounts.find((account) => account.username === username);
     if (existingAccount) {
-        return res.status(409).json({ message: 'Ce nom d\'utilisateur existe déjà.' });
+        return res.status(409).json({ error: 'Ce nom d\'utilisateur existe déjà.' });
     }
 
     try {
@@ -120,10 +120,10 @@ app.post('/signup', async (req, res) => {
         accounts.push(newAccount);
         writeAccountsToFile(accounts);
 
-        res.redirect(`/home.html?username=${encodeURIComponent(username)}&points=${newAccount.points}`);
+        res.json({ message: 'Compte créé avec succès.', username: newAccount.username, points: newAccount.points });
     } catch (error) {
         console.error('Erreur lors de la vérification du mot de passe:', error);
-        res.status(500).json({ message: 'Erreur lors de la vérification du mot de passe.' });
+        res.status(500).json({ error: 'Erreur lors de la vérification du mot de passe.' });
     }
 });
 
@@ -168,7 +168,7 @@ app.get('/messages', (req, res) => {
 // Route pour la page d'accueil
 app.get('/', (req, res) => {
     const { username, points } = req.query;
-    res.sendFile(path.join(__dirname, 'public', 'home.html'));
+    res.redirect(`/home.html?username=${encodeURIComponent(username)}&points=${encodeURIComponent(points)}`);
 });
 
 // Démarrage du serveur
