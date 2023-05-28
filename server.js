@@ -120,7 +120,7 @@ app.post('/signup', async (req, res) => {
         accounts.push(newAccount);
         writeAccountsToFile(accounts);
 
-        res.json({ message: 'Compte créé avec succès.', username: newAccount.username, points: newAccount.points });
+        res.redirect(`/home.html?username=${encodeURIComponent(newAccount.username)}&points=${newAccount.points}`);
     } catch (error) {
         console.error('Erreur lors de la vérification du mot de passe:', error);
         res.status(500).json({ error: 'Erreur lors de la vérification du mot de passe.' });
