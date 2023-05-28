@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="fr">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Projet du "NON"</title>
+        <link rel="stylesheet" href="webStyle.css">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.0/socket.io.js"></script>
+    </head>
+    <body>
+        <header>
+            <h1>Projet du "NON"</h1>
+        </header>
+
+        <section id="hero">
+            <div class="hero-content">
+                <h2>Prêt à relever tous les défis ?</h2>
+                <h2><p>Bienvenue, <strong><span id="username"></span></strong> !</p></h2>
+                <h2><p>Tu as  <strong> <span id="points"></span></strong> points.</p></h2>
+            </div>
+        </section>
+
+        <div class="grid-container">
+            <section id="challenge-of-the-day">
+                <h2>Défi du jour</h2>
+                <div class="challenge-card">
+                    <h3>Défi de cuisine extrême</h3>
+                    <p>Note de difficulté : 8/10</p>
+                    <p>Qui peut manger une glace avec du piment ?</p>
+                </div>
+            </section>
+
+            <section id="top-board">
+                <h2>Top Board</h2>
+                <div class="top-board-box">
+                    <ol id="top-accounts-list">
+                        <!-- Les joueurs seront ajoutés dynamiquement ici -->
+                    </ol>
+                </div>
+            </section>
+
+            <section id="challenges">
+                <h2>Défis récents</h2>
+                <div class="challenge-card">
+                    <h3>Défi de cuisine extrême</h3>
+                    <p>Note de difficulté : 8/10</p>
+                    <p>Qui peut manger une glace avec du piment ?</p>
+                </div>
+                <div class="challenge-card">
+                    <h3>Défi d'improvisation folle</h3>
+                    <p>Note de difficulté : 6/10</p>
+                    <p>Improvise une danse en pleine rue et filme-toi !</p>
+                </div>
+            </section>
+
+            <section id="chat">
+                <h2>Chat</h2>
+                <div id="message-box"></div>
+                <div id="chat-messages"></div>
+                <form id="chat-form">
+                    <input type="text" id="message-input" placeholder="Entrez votre message">
+                    <button type="submit">Envoyer</button>
+                </form>
+            </section>
+        </div>
+
+        <footer>
+            <p>&copy; 2023 Projet du "NON". Tous droits réservés.</p>
+        </footer>
+
+        <script>
+            // Récupérer le nom d'utilisateur et les points depuis les paramètres de l'URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const username = urlParams.get('username');
+            const points = urlParams.get('points');
+
+            // Mettre à jour les champs de nom d'utilisateur et de points
+            const usernameField = document.getElementById('username');
+            const pointsField = document.getElementById('points');
+
+            if (usernameField && pointsField) {
+                usernameField.textContent = username;
+                pointsField.textContent = points;
+            }
+
+            // Récupérer la liste des joueurs depuis le serveur et afficher le top board
+            fetch('/top-accounts')
+                .then(response => response.json())
+                .then(data => {
+                    const topAccountsList = document.getElementById('top-accounts-list');
+
+                    if (topAccountsList) {
+                        data.forEach((account, index) => {
+                            const listItem = document.createElement('li');
+                            listItem.innerHTML = `<span>${index + 1}. ${account.username}</span> - ${account.points} points`;
+                            topAccountsList.appendChild(listItem);
+                        });
+                    }
+                })
+                .catch(error => console.error('Erreur lors de la récupération du top board:', error));
+
+            // Établir une connexion WebSocket avec le serveur
+            const socket = new WebSocket('ws://localhost:3000');
+
+            // Gérer les événements de la connexion WebSocket
+            socket.addEventListener('open', () => {
+                console.log('Connecté au serveur WebSocket');
+
+                // Envoyer le nom d'utilisateur au serveur pour le joindre au chat
+                const joinMessage = {
+                    sender: username,
+                    content: 'a rejoint le chat'
+                };
+                socket.send(JSON.stringify(joinMessage));
+            });
+
+            socket.addEventListener('message', event => {
+                // Réception d'un message du serveur
+                const message = JSON.parse(event.data);
+                appendMessage(message.sender, message.content);
+            });
+
+            // Envoyer un message via le formulaire de chat
+            const chatForm = document.getElementById('chat-form');
+            const messageInput = document.getElementById('message-input');
+            const chatMessages = document.getElementById('chat-messages');
+
+            chatForm.addEventListener('submit', event => {
+                event.preventDefault();
+
+                const messageContent = messageInput.value.trim();
+                if (messageContent !== '') {
+                    // Créer un objet message avec le nom d'utilisateur et le contenu
+                    const message = {
+                        sender: username,
+                        content: messageContent
+                    };
+
+                    // Envoyer le message au serveur via WebSocket
+                    socket.send(JSON.stringify(message));
+
+                    // Réinitialiser le champ de saisie du message
+                    messageInput.value = '';
+                }
+            });
+
+            // Ajouter un message au chat
+            function appendMessage(sender, content) {
+                const messageElement = document.createElement('div');
+                messageElement.innerHTML = `<strong>${sender}: </strong>${content}`;
+                chatMessages.appendChild(messageElement);
+
+                // Faire défiler le chat vers le bas pour afficher le dernier message
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
+            // Fonction pour afficher les messages sur la page
+            function displayMessages(messages) {
+                const messageBox = document.getElementById('message-box');
+
+                // Effacer le contenu précédent
+                messageBox.innerHTML = '';
+
+                // Parcourir les messages et les ajouter à la page
+                messages.forEach((message) => {
+                    const messageElement = document.createElement('div');
+                    messageElement.classList.add('message');
+                    messageElement.innerHTML = `<strong>${message.sender}: </strong>${message.content}`;
+
+                    messageBox.appendChild(messageElement);
+                });
+            }
+
+            // Fonction pour récupérer les messages depuis le serveur
+            function getMessages() {
+                fetch('/messages')
+                    .then((response) => response.json())
+                    .then((data) => {
+                        if (data.type === 'messages') {
+                            displayMessages(data.data);
+                        }
+                    })
+                    .catch((error) => console.error('Erreur lors de la récupération des messages:', error));
+            }
+
+            // Appeler la fonction getMessages pour afficher les messages au chargement de la page
+            getMessages();
+        </script>
+    </body>
+</html>
+
